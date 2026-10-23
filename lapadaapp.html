@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LAPADA FM - Player</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at top, #f7d977 0, #2b2108 55%, #050200 100%);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #f7e4a8;
+    }
+
+    .player-container {
+      width: 100%;
+      max-width: 360px;
+      height: 680px;
+      background: radial-gradient(circle at center, #181307 0%, #050401 100%);
+      border-radius: 40px;
+      border: 3px solid #a9873c;
+      box-shadow: 0 0 35px rgba(0, 0, 0, 0.9);
+      padding: 30px 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      /* Centraliza os itens verticalmente sem distorcer */
+      justify-content: flex-start;
+      position: relative;
+      gap: 20px;
+    }
+
+    /* LOGO GRANDE (sem borda retangular) */
+    .logo-container {
+      width: 100%;
+      text-align: center;
+      margin-top: 0;
+    }
+
+    .logo-img {
+      width: 240px;
+      max-width: 85%;
+      height: auto;
+      object-fit: contain;
+      filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.9));
+    }
+
+    /* ÁREA DO CÍRCULO - CENTRALIZADO E HARMÔNICO */
+    .circle-wrapper {
+      flex: 1; /* ocupa o espaço restante */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      min-height: 260px;
+    }
+
+    .outer-circle {
+      width: 260px;
+      height: 260px; /* mesmo valor exato do width */
+      flex-shrink: 0; /* IMPEDE que o círculo seja comprimido/esticado */
+      border-radius: 50%;
+      border: 2px solid rgba(245, 208, 97, 0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      box-shadow: 
+        0 0 25px rgba(255, 215, 0, 0.15),
+        inset 0 0 25px rgba(0,0,0,0.9);
+      background: radial-gradient(circle, #2b1f0a 0%, #0a0803 80%);
+    }
+
+    /* Detalhe dourado parcial */
+    .outer-circle::before {
+      content: '';
+      position: absolute;
+      inset: -3px;
+      border-radius: 50%;
+      border: 2.5px solid transparent;
+      border-top: 2.5px solid #f5d061;
+      border-left: 2.5px solid #f5d061;
+      opacity: 0.9;
+      filter: drop-shadow(0 0 8px #f5d061);
+      pointer-events: none;
+    }
+
+    /* BOTÃO CENTRAL */
+    .btn-play-center {
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      background: radial-gradient(circle, #ffe994 0%, #d4a333 55%, #8a6414 100%);
+      box-shadow:
+        0 0 35px rgba(212, 163, 51, 0.7),
+        inset 0 2px 6px rgba(255,255,255,0.5),
+        0 6px 15px rgba(0,0,0,0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.15s ease, box-shadow 0.2s ease;
+      z-index: 2;
+    }
+
+    .btn-play-center:hover {
+      transform: scale(1.06);
+      box-shadow: 0 0 45px rgba(212, 163, 51, 1);
+    }
+
+    .btn-play-center:active {
+      transform: scale(0.96);
+    }
+
+    /* ÍCONE */
+    .play-icon {
+      width: 0;
+      height: 0;
+      border-style: solid;
+      border-width: 16px 0 16px 28px;
+      border-color: transparent transparent transparent #2a1a08;
+      margin-left: 7px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-play-center.playing .play-icon {
+      width: 26px;
+      height: 32px;
+      border-style: double;
+      border-width: 0 0 0 24px;
+      border-color: #2a1a08;
+      margin-left: 0;
+      border-radius: 3px;
+    }
+
+    /* STATUS */
+    .status-container {
+      text-align: center;
+      min-height: 48px;
+      width: 100%;
+    }
+
+    .status-text {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 2.5px;
+      color: #f5d061;
+      text-shadow: 0 0 8px rgba(245, 208, 97, 0.5);
+      text-align: center;
+      line-height: 1.4;
+    }
+
+    /* VOLUME */
+    .volume-container {
+      width: 100%;
+      padding: 0 10px;
+    }
+
+    .volume-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: #a9873c;
+      margin-bottom: 8px;
+      display: block;
+      text-align: center;
+    }
+
+    .volume-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .volume-slider {
+      flex: 1;
+      -webkit-appearance: none;
+      appearance: none;
+      height: 4px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, rgba(245,208,97,0.2) 0%, rgba(245,208,97,0.2) 80%, rgba(245,208,97,0.2) 100%);
+      outline: none;
+      cursor: pointer;
+    }
+
+    .volume-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #ffe994;
+      border: 2px solid #8a6414;
+      box-shadow: 0 0 10px #ffe994;
+      cursor: pointer;
+      margin-top: -5px;
+    }
+
+    .volume-slider::-moz-range-thumb {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #ffe994;
+      border: 2px solid #8a6414;
+      box-shadow: 0 0 10px #ffe994;
+      cursor: pointer;
+    }
+
+    /* RODAPÉ */
+    .footer-text {
+      font-size: 10px;
+      letter-spacing: 1.5px;
+      color: rgba(245, 208, 97, 0.35);
+      text-transform: uppercase;
+      text-align: center;
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="player-container">
+
+  <!-- LOGO -->
+  <div class="logo-container">
+    <img src="logo.png" alt="LAPADA FM" class="logo-img">
+  </div>
+
+  <!-- CÍRCULO CENTRALIZADO E HARMÔNICO -->
+  <div class="circle-wrapper">
+    <div class="outer-circle">
+      <button id="playBtn" class="btn-play-center" aria-label="Play/Pause">
+        <div class="play-icon" id="playIcon"></div>
+      </button>
+    </div>
+  </div>
+
+  <!-- STATUS -->
+  <div class="status-container">
+    <div class="status-text" id="statusLabel">Conectando à LAPADA FM…</div>
+  </div>
+
+  <!-- VOLUME -->
+  <div class="volume-container">
+    <span class="volume-label">Volume</span>
+    <div class="volume-wrapper">
+      <input 
+        type="range" 
+        id="volumeRange" 
+        class="volume-slider" 
+        min="0" 
+        max="1" 
+        step="0.01" 
+        value="0.8">
+    </div>
+  </div>
+
+  <div class="footer-text">Lapada FM © Todos os direitos reservados</div>
+</div>
+
+<!-- ÁUDIO -->
+<audio id="audioStream">
+  <source src="https://srv35.ipstm.net:3721/;stream" type="audio/mpeg">
+</audio>
+
+<script>
+  const audio       = document.getElementById('audioStream');
+  const playBtn     = document.getElementById('playBtn');
+  const statusLabel = document.getElementById('statusLabel');
+  const volumeRange = document.getElementById('volumeRange');
+
+  audio.volume = volumeRange.value;
+
+  async function startPlaying(auto = false) {
+    try {
+      statusLabel.textContent = auto ? "Conectando à LAPADA FM…" : "Reconectando…";
+      audio.load();
+      await audio.play();
+      playBtn.classList.add('playing');
+      statusLabel.textContent = "AO VIVO - LAPADA FM";
+    } catch (e) {
+      console.warn("Erro ou autoplay bloqueado:", e);
+      statusLabel.textContent = auto
+        ? "Toque no botão para ouvir a LAPADA FM"
+        : "ERRO AO CONECTAR. TENTE NOVAMENTE.";
+      playBtn.classList.remove('playing');
+    }
+  }
+
+  async function togglePlayback() {
+    if (audio.paused) {
+      await startPlaying(false);
+    } else {
+      audio.pause();
+      playBtn.classList.remove('playing');
+      statusLabel.textContent = "PAUSADO";
+    }
+  }
+
+  playBtn.addEventListener('click', togglePlayback);
+
+  volumeRange.addEventListener('input', e => {
+    audio.volume = e.target.value;
+  });
+
+  window.addEventListener('load', () => {
+    startPlaying(true);
+  });
+</script>
+
+</body>
+</html>
