@@ -29,13 +29,12 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      /* Centraliza os itens verticalmente sem distorcer */
       justify-content: flex-start;
       position: relative;
       gap: 20px;
     }
 
-    /* LOGO GRANDE (sem borda retangular) */
+    /* LOGO */
     .logo-container {
       width: 100%;
       text-align: center;
@@ -50,9 +49,9 @@
       filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.9));
     }
 
-    /* ÁREA DO CÍRCULO - CENTRALIZADO E HARMÔNICO */
+    /* CÍRCULO CENTRAL */
     .circle-wrapper {
-      flex: 1; /* ocupa o espaço restante */
+      flex: 1;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -62,21 +61,20 @@
 
     .outer-circle {
       width: 260px;
-      height: 260px; /* mesmo valor exato do width */
-      flex-shrink: 0; /* IMPEDE que o círculo seja comprimido/esticado */
+      height: 260px;
+      flex-shrink: 0;
       border-radius: 50%;
       border: 2px solid rgba(245, 208, 97, 0.25);
       display: flex;
       align-items: center;
       justify-content: center;
       position: relative;
-      box-shadow: 
+      box-shadow:
         0 0 25px rgba(255, 215, 0, 0.15),
         inset 0 0 25px rgba(0,0,0,0.9);
       background: radial-gradient(circle, #2b1f0a 0%, #0a0803 80%);
     }
 
-    /* Detalhe dourado parcial */
     .outer-circle::before {
       content: '';
       position: absolute;
@@ -118,7 +116,6 @@
       transform: scale(0.96);
     }
 
-    /* ÍCONE */
     .play-icon {
       width: 0;
       height: 0;
@@ -184,7 +181,7 @@
       appearance: none;
       height: 4px;
       border-radius: 999px;
-      background: linear-gradient(90deg, rgba(245,208,97,0.2) 0%, rgba(245,208,97,0.2) 80%, rgba(245,208,97,0.2) 100%);
+      background: rgba(245,208,97,0.2);
       outline: none;
       cursor: pointer;
     }
@@ -212,7 +209,6 @@
       cursor: pointer;
     }
 
-    /* RODAPÉ */
     .footer-text {
       font-size: 10px;
       letter-spacing: 1.5px;
@@ -232,7 +228,7 @@
     <img src="logo.png" alt="LAPADA FM" class="logo-img">
   </div>
 
-  <!-- CÍRCULO CENTRALIZADO E HARMÔNICO -->
+  <!-- CÍRCULO / BOTÃO CENTRAL -->
   <div class="circle-wrapper">
     <div class="outer-circle">
       <button id="playBtn" class="btn-play-center" aria-label="Play/Pause">
@@ -275,7 +271,13 @@
   const statusLabel = document.getElementById('statusLabel');
   const volumeRange = document.getElementById('volumeRange');
 
-  audio.volume = volumeRange.value;
+  // Detectar iOS
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
+  // Volume inicial (em navegadores que permitem mudar volume via JS)
+  if (!isIOS) {
+    audio.volume = volumeRange.value;
+  }
 
   async function startPlaying(auto = false) {
     try {
@@ -305,10 +307,27 @@
 
   playBtn.addEventListener('click', togglePlayback);
 
-  volumeRange.addEventListener('input', e => {
-    audio.volume = e.target.value;
-  });
+  // Controle de volume
+  if (!isIOS) {
+    // Navegadores que permitem controle real de volume
+    volumeRange.addEventListener('input', e => {
+      audio.volume = e.target.value;
+    });
+  } else {
+    // Em iOS o slider continua visível, mas avisamos que o controle real é pelos botões físicos
+    volumeRange.addEventListener('input', () => {
+      const oldText = statusLabel.textContent;
+      statusLabel.textContent = "No iPhone use os botões físicos de volume.";
+      setTimeout(() => {
+        // volta ao texto anterior
+        statusLabel.textContent = audio.paused
+          ? "Toque no botão para ouvir a LAPADA FM"
+          : "AO VIVO - LAPADA FM";
+      }, 3000);
+    });
+  }
 
+  // Tentar autoplay ao carregar
   window.addEventListener('load', () => {
     startPlaying(true);
   });
